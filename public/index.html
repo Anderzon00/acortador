@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Acortador de Enlaces</title>
+  <script>
+    async function acortar() {
+      const url = document.getElementById("url").value;
+      if (!url) {
+        alert("Por favor, ingresa una URL.");
+        return;
+      }
+
+      const res = await fetch("/acortar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!res.ok) {
+        alert("Hubo un error al acortar el enlace.");
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById("resultado").innerHTML =
+        `<p><strong>Enlace corto:</strong> <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></p>`;
+    }
+  </script>
+</head>
+<body>
+  <h2>Acortador de Enlaces</h2>
+  <input type="text" id="url" placeholder="Pega una URL larga" size="50" />
+  <button onclick="acortar()">Acortar</button>
+  <div id="resultado"></div>
+</body>
+</html>
