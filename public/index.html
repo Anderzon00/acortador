@@ -1,39 +1,150 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>Acortador de Enlaces</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem 2.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      max-width: 500px;
+      width: 100%;
+    }
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #888;
+      padding: 1rem 0;
+      background: #f1f1f1;
+    }
+    .ui.message {
+      margin-bottom: 2rem;
+    }
+    #resultado {
+      margin-top: 1rem;
+    }
+    .error-message {
+      color: #b90000;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    .success-message {
+      color: #218838;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+  </style>
+
   <script>
     async function acortar() {
-      const url = document.getElementById("url").value;
+      const urlInput = document.getElementById("url");
+      const resultado = document.getElementById("resultado");
+      const errorMsg = document.getElementById("errorMsg");
+      resultado.innerHTML = "";
+      errorMsg.textContent = "";
+
+      const url = urlInput.value.trim();
       if (!url) {
-        alert("Por favor, ingresa una URL.");
+        errorMsg.textContent = "Por favor, ingresa una URL.";
+        urlInput.focus();
+        return;
+      }
+      // Validación básica de URL
+      try {
+        new URL(url);
+      } catch {
+        errorMsg.textContent = "La URL ingresada no es válida.";
+        urlInput.focus();
         return;
       }
 
-      const res = await fetch("/acortar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
+      try {
+        const res = await fetch("/acortar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
 
-      if (!res.ok) {
-        alert("Hubo un error al acortar el enlace.");
-        return;
+        if (!res.ok) {
+          throw new Error("Hubo un error al acortar el enlace.");
+        }
+
+        const data = await res.json();
+        resultado.innerHTML =
+          `<div class="success-message"><strong>Enlace corto:</strong> <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></div>`;
+        urlInput.value = "";
+      } catch (err) {
+        errorMsg.textContent = err.message || "Error inesperado.";
       }
-
-      const data = await res.json();
-      document.getElementById("resultado").innerHTML =
-        `<p><strong>Enlace corto:</strong> <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></p>`;
     }
+
+    // Permitir enviar con Enter
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("url").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") acortar();
+      });
+    });
   </script>
 </head>
 <body>
-  <h2>Acortador de Enlaces</h2>
-  <input type="text" id="url" placeholder="Pega una URL larga" size="50" />
-  <button onclick="acortar()">Acortar</button>
-  <div id="resultado"></div>
+  <main>
+    <div class="container">
+      <h2 class="ui header center aligned">Acortador de Enlaces</h2>
+
+      <div class="ui info message">
+        <div class="header">Instrucciones</div>
+        <ul>
+          <li>Ingresa la URL que deseas acortar en el campo de texto.</li>
+          <li>Haz clic en <strong>ACORTAR ENLACE</strong> o presiona <kbd>Enter</kbd>.</li>
+        </ul>
+      </div>
+
+      <form class="ui form" onsubmit="event.preventDefault(); acortar();">
+        <div class="field">
+          <label for="url">URL a acortar</label>
+          <div class="ui action input" style="width:100%;">
+            <input type="text" id="url" placeholder="https://ejemplo.com" autocomplete="off" />
+            <button type="button" class="positive ui button" onclick="acortar()">ACORTAR ENLACE</button>
+          </div>
+          <div id="errorMsg" class="error-message"></div>
+        </div>
+      </form>
+
+      <div class="ui icon message" style="margin-top:2rem;">
+        <i class="linkify icon"></i>
+        <div class="content">
+          <div class="header">Enlace acortado</div>
+          <div id="resultado"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Acortador de Enlaces. Todos los derechos reservados.</p>
+  </footer>
 </body>
 </html>
