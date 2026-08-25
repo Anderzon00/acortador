@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirigiendo...</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f9f9f9;
+      color: #444;
+    }
+  </style>
+  <script>
+    // 👉 Pega aquí la misma URL de Apps Script que usaste en index.html
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIefr-oOZ0pjLA2sAjxZbbdEzGiYWowA1xNtYAcFN7qF6CCsV-HX18v473FRitpJ6l/exec";
+
+    // GitHub Pages muestra este 404.html para CUALQUIER ruta que no exista,
+    // por ejemplo /abc123. Tomamos el último segmento de la ruta como código.
+    const partes = window.location.pathname.split('/').filter(Boolean);
+    const codigo = partes[partes.length - 1];
+
+    function mostrarError(msg) {
+      document.getElementById('mensaje').textContent = msg;
+    }
+
+    if (!codigo) {
+      mostrarError('Enlace no válido.');
+    } else {
+      fetch(`${APPS_SCRIPT_URL}?codigo=${encodeURIComponent(codigo)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.url) {
+            window.location.replace(data.url);
+          } else {
+            mostrarError('Este enlace no existe o fue eliminado.');
+          }
+        })
+        .catch(() => mostrarError('Error al buscar el enlace. Intenta de nuevo.'));
+    }
+  </script>
+</head>
+<body>
+  <p id="mensaje">Redirigiendo...</p>
+</body>
+</html>
